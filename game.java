@@ -1,3 +1,30 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.ArrayList;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import javafx.scene.layout.Pane;
+
+public class Database {
+    private Connection connection;
+
+    public Database(String url, String user, String password) throws SQLException {
+        connection = DriverManager.getConnection(url, user, password);
+    }
+
+    public Connection getConnection() {
+        return connection;
+    }
+
+    // Implement methods for inserting, updating, and querying Character, NPC, and Item data
+    // ...
+}
+
 public class Character {
     private String name;
     private int x;
@@ -6,6 +33,13 @@ public class Character {
     private int level;
     private List<Item> inventory;
     private String id;
+    private CollisionDetector collisionDetector;
+    private Map map;
+
+    public Character(CollisionDetector collisionDetector, Map map) {
+        this.collisionDetector = collisionDetector;
+        this.map = map;
+    }
 
     // Constructor, Getter and Setter methods
     // ...
@@ -13,7 +47,6 @@ public class Character {
     public synchronized void move(String direction) {
         int newX = x;
         int newY = y;
-    
         switch (direction) {
             case "UP":
                 newY--;
@@ -30,61 +63,93 @@ public class Character {
             default:
                 break;
         }
-    
-        if (!collisionDetector.detectCollisions(map, this)) {
+
+        if (!collisionDetector.detectCollisions(map, this, newX, newY)) {
             x = newX;
             y = newY;
         }
     }
-    
+
     public synchronized void attack(Character target) {
-        // Implement attack logic
+        int damage = level * 10;
+        target.setHealth(target.getHealth() - damage);
     }
 
     public synchronized void pickup(Item item) {
-        // Implement item pickup logic
+        inventory.add(item);
+        map.removeItem(item);
     }
 
     public synchronized void use(Item item) {
-        // Implement item usage logic
+        item.use(this);
+        inventory.remove(item);
     }
 
     public synchronized void showInventory() {
-        // Implement inventory display logic
+        System.out.println("Inventory:");
+        inventory.forEach(item -> System.out.println(item.getName()));
     }
 
     public void saveToDB(Database database) {
-        // Implement save to database logic
+        // Implement save to database logic for Character
     }
 
     public void loadFromDB(Database database) {
-        // Implement load from database logic
+        // Implement load from database logic for Character
     }
 }
+
 public class NPC {
     private String name;
     private int x;
     private int y;
     private String dialogue;
     private String id;
-
-    // Constructor, Getter and Setter methods
-    // ...
+    private int moveCooldown;
+    private int currentCooldown;
 
     public synchronized void interact(Character character) {
-        // Implement interaction logic
+        System.out.println("NPC " + name + " says: " + dialogue);
     }
 
     public synchronized void move(String direction) {
-        // Implement movement logic
+        if (currentCooldown > 0) {
+            currentCooldown--;
+            return;
+        }
+
+        int newX = x;
+        int newY = y;
+
+        switch (direction) {
+            case "UP":
+                newY--;
+                break;
+            case "DOWN":
+                newY++;
+                break;
+            case "LEFT":
+                newX--;
+                break;
+            case "RIGHT":
+                newX++;
+                break;
+            default:
+                break;
+        }
+
+        x = newX;
+        y = newY;
+
+        currentCooldown = moveCooldown;
     }
 
     public void saveToDB(Database database) {
-        // Implement save to database logic
+        // Implement save to database logic for NPC
     }
 
     public void loadFromDB(Database database) {
-        // Implement load from database logic
+        // Implement load from database logic for NPC
     }
 }
 public class Item {
@@ -93,21 +158,29 @@ public class Item {
     private String effect;
     private String id;
 
-    // Constructor, Getter and Setter methods
-    // ...
-
     public synchronized void use(Character character) {
-        // Implement item usage logic
+        switch (effect) {
+            case "HEAL":
+                character.setHealth(character.getHealth() + 50);
+                break;
+            case "BOOST":
+                character.setLevel(character.getLevel() + 1);
+                break;
+            default:
+                System.out.println("Unknown item effect.");
+                break;
+        }
     }
 
     public void saveToDB(Database database) {
-        // Implement save to database logic
+        // Implement save to database logic for Item
     }
 
     public void loadFromDB(Database database) {
-        // Implement load from database logic
+        // Implement load from database logic for Item
     }
 }
+
 public class Map {
     private int size;
     private List<Character> characters;
@@ -115,19 +188,20 @@ public class Map {
     private List<Item> items;
     private String id;
 
-    // Constructor, Getter and Setter methods
-    // ...
-
     public synchronized void addCharacter(Character character) {
-        // Implement character addition logic
+        characters.add(character);
     }
 
     public synchronized void addNPC(NPC npc) {
-        // Implement NPC addition logic
+        npcs.add(npc);
     }
 
     public synchronized void addItem(Item item) {
-        // Implement item addition logic
+        items.add(item);
+    }
+
+    public synchronized void removeItem(Item item) {
+        items.remove(item);
     }
 
     public void showMap() {
@@ -135,21 +209,24 @@ public class Map {
     }
 
     public void saveToDB(Database database) {
-        // Implement save to database logic
+        // Implement save to database logic for Map
     }
 
     public void loadFromDB(Database database) {
-        // Implement load from database logic
+        // Implement load from database logic for Map
     }
 }
+
 public class CollisionDetector {
-    public synchronized boolean detectCollisions(Map map, Object object) {
+    public synchronized boolean detectCollisions(Map map, Object object, int newX, int newY) {
         // Implement collision detection logic
     }
 }
+
 public class GameEvent {
     // Implement event properties and methods as needed
 }
+
 public class GameState {
     private boolean gameOver;
     private boolean gameWon;
@@ -162,6 +239,7 @@ public class GameState {
         // Implement loss condition check logic
     }
 }
+
 public class Chat {
     public synchronized void sendMessage(String message) {
         // Implement message sending logic
@@ -171,29 +249,6 @@ public class Chat {
         // Implement message receiving logic
     }
 }
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
-public class Database {
-    private Connection connection;
-
-    public Database(String url, String user, String password) throws SQLException {
-        connection = DriverManager.getConnection(url, user, password);
-    }
-
-    public Connection getConnection() {
-        return connection;
-    }
-
-    // Implement any database-related methods as needed
-}
-import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-import javafx.scene.layout.Pane;
 
 public class GameWindow extends Application {
     private Pane mainPane;
@@ -221,19 +276,14 @@ public class Game {
     CollisionDetector collisionDetector;
 
     public Game() throws Exception {
-        // Initialize the game window
         gameWindow = new GameWindow();
 
-        // Initialize the database connection
         String url = "jdbc:mysql://localhost:3306/your_database_name";
         String user = "your_database_user";
         String password = "your_database_password";
         database = new Database(url, user, password);
 
-        // Initialize collision detector
         collisionDetector = new CollisionDetector();
-
-        // Load map, player, and other data from the database
         loadFromDB();
     }
 
@@ -255,9 +305,5 @@ public class Game {
 
     public void loadFromDB() {
         // Implement load from database logic
-    }
-
-    public static void main(String[] args) {
-        Application.launch(GameWindow.class, args);
     }
 }
