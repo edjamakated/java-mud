@@ -19,9 +19,79 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-// Existing classes from your previous code...
+// Character.java
+public class Character {
+    String name;
+    int x;
+    int y;
+    int health;
+    int level;
+    List<Item> inventory;
+    String id;
 
-// New classes
+    public void move(String direction) {}
+    public void attack(Character target) {}
+    public void pickup(Item item) {}
+    public void use(Item item) {}
+    public void showInventory() {}
+    public void saveToDB() {}
+    public void loadFromDB() {}
+}
+
+// NPC.java
+public class NPC {
+    String name;
+    int x;
+    int y;
+    String dialogue;
+    String id;
+
+    public void interact() {}
+    public void move(String direction) {}
+    public void saveToDB() {}
+    public void loadFromDB() {}
+}
+
+// Item.java
+public class Item {
+    String name;
+    String description;
+    String effect;
+    String id;
+
+    public void use() {}
+    public void saveToDB() {}
+    public void loadFromDB() {}
+}
+
+// Map.java
+public class Map {
+    int size;
+    List<Character> characters;
+    List<NPC> npcs;
+    List<Item> items;
+    String id;
+
+    public void addCharacter(Character character) {}
+    public void addNPC(NPC npc) {}
+    public void addItem(Item item) {}
+    public void showMap() {}
+    public void saveToDB() {}
+    public void loadFromDB() {}
+}
+
+// Game.java
+public class Game {
+    Character player;
+    Map map;
+    Database database;
+
+    public void start() {}
+    public void play() {}
+    public void end() {}
+    public void saveToDB() {}
+    public void loadFromDB() {}
+}
 
 public class CollisionDetector {
     public void detectCollisions(Map map) {}
@@ -43,8 +113,6 @@ public class Chat {
     public void sendMessage(String message) {}
     public void receiveMessage(String message) {}
 }
-
-// Updated Client class with networking code using java.net
 
 public class Client {
     Socket socket;
@@ -69,8 +137,6 @@ public class Client {
     public void updateCharacter() {}
     public void displayMap() {}
 }
-
-// Updated Server class with networking code using java.net
 
 public class Server {
     ServerSocket serverSocket;
@@ -126,7 +192,6 @@ public class Server {
         }
     }
 }
-// Updated Database class with basic JDBC functionality and MySQL
 
 public class Database {
     Connection connection;
