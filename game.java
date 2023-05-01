@@ -339,7 +339,24 @@ public class Map {
 
 public class CollisionDetector {
     public synchronized boolean detectCollisions(Map map, Object object, int newX, int newY) {
-        // Implement collision detection logic
+        if (object instanceof Character) {
+            for (Character character : map.characters) {
+                if (character.getX() == newX && character.getY() == newY) {
+                    return true;
+                }
+            }
+            for (NPC npc : map.npcs) {
+                if (npc.getX() == newX && npc.getY() == newY) {
+                    return true;
+                }
+            }
+            for (Item item : map.items) {
+                if (item.getX() == newX && item.getY() == newY) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
 
@@ -407,9 +424,54 @@ public class Game {
         collisionDetector = new CollisionDetector();
         loadFromDB();
     }
-
+    public static void main(String[] args) {
+        try {
+            Game game = new Game();
+            game.initGameObjects();
+    
+            Server server = new Server(3000);
+            new Thread(() -> {
+                try {
+                    server.start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+    
+            game.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    
+    public void initGameObjects() {
+        map = new Map();
+        player = new Character(collisionDetector, map);
+        player.setX(1);
+        player.setY(1);
+        player.setName("Player 1");
+    
+        NPC npc = new NPC();
+        npc.setX(5);
+        npc.setY(5);
+        npc.setName("NPC 1");
+        npc.setDialogue("Hello! I'm an NPC.");
+    
+        Item item = new Item();
+        item.setX(3);
+        item.setY(3);
+        item.setName("Health Potion");
+        item.setDescription("A potion that heals the user by 50 HP.");
+        item.setEffect("HEAL");
+    
+        map.addCharacter(player);
+        map.addNPC(npc);
+        map.addItem(item);
+    }
+    
     public void start() {
-        // Implement game start logic
+        Application.launch(GameWindow.class);
     }
 
     public void play() {
