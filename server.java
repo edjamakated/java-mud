@@ -1,9 +1,3 @@
-import java.io.*;
-import java.net.*;
-import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 public class Server {
     private int port;
     private ArrayList<ClientHandler> clients;
@@ -28,7 +22,7 @@ public class Server {
         }
     }
 
-    public synchronized void broadcast(String message, ClientHandler sender) throws IOException {
+    public void broadcast(String message, ClientHandler sender) {
         for (ClientHandler client : clients) {
             if (client != sender) {
                 client.sendMessage(message);
@@ -36,7 +30,48 @@ public class Server {
         }
     }
 
-    public synchronized void removeClient(ClientHandler clientHandler) {
-        clients.remove(clientHandler);
+    public void removeClient(ClientHandler client) {
+        clients.remove(client);
+    }
+}
+
+class ClientHandler implements Runnable {
+    private Socket clientSocket;
+    private Server server;
+    private PrintWriter out;
+    private BufferedReader in;
+
+    public ClientHandler(Socket clientSocket, Server server) {
+        this.clientSocket = clientSocket;
+        this.server = server;
+    }
+
+    @Override
+    public void run() {
+        try {
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+            String message;
+            while ((message = in.readLine()) != null) {
+                System.out.println("Received: " + message);
+                server.broadcast(message, this);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                out.close();
+                in.close();
+                clientSocket.close();
+                server.removeClient(this);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void sendMessage(String message) {
+        out.println(message);
     }
 }
